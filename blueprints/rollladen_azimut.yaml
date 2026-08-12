@@ -78,17 +78,17 @@ condition:
     state: "on"
 
 action:
-  # Wenn sowohl Min als auch Max auf 0 stehen oder die Verzögerung 0 ist, schaltet die Logik sofort.
+  # Zufallsverzögerung berechnen (falls Min oder Max > 0 ist)
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ (var_min_delay | int) > 0 or (var_max_delay | int) > 0 }}"
+            value_template: "{{ (input_min | int(0)) > 0 or (input_max | int(0)) > 0 }}"
         sequence:
           - delay:
-              minutes: "{{ range(var_min_delay | int, (var_max_delay | int) + 1) | random }}"
+              minutes: "{{ range(input_min | int(0), (input_max | int(0)) + 1) | random }}"
     vars:
-      var_min_delay: !input min_delay
-      var_max_delay: !input max_delay
+      input_min: !input min_delay
+      input_max: !input max_delay
 
   - choose:
       - conditions:
