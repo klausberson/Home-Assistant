@@ -1,0 +1,103 @@
+blueprint:
+  name: "Rollladen-Steuerung nach Sonnen-Azimut mit variabler Zufallsverzögerung"
+  description: "Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne (sun.sun), einem Aktivierungs-Schalter und einer einstellbaren zufälligen Verzögerung."
+  domain: automation
+  input:
+    target_cover:
+      name: Rollladen
+      description: Der zu steuernde Rollladen.
+      selector:
+        entity:
+          domain: cover
+
+    auto_enable_input:
+      name: Automatik-Schalter
+      description: Helfer (input_boolean), der bestimmt, ob das automatische Öffnen/Schließen aktiv ist.
+      selector:
+        entity:
+          domain: input_boolean
+
+    open_azimuth:
+      name: Azimut zum Öffnen (Grad)
+      description: Bei welchem Sonnen-Azimut (z. B. 90 für Osten) soll der Rollladen geöffnet werden?
+      default: 90
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: "°"
+
+    close_azimuth:
+      name: Azimut zum Schließen (Grad)
+      description: Bei welchem Sonnen-Azimut (z. B. 270 für Westen) soll der Rollladen geschlossen werden?
+      default: 270
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: "°"
+
+    min_delay:
+      name: Mindest-Verzögerung (Minuten)
+      description: Minimale zufällige Wartezeit vor der Aktion (z. B. 1).
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: "min"
+
+    max_delay:
+      name: Maximale Verzögerung (Minuten)
+      description: Maximale zufällige Wartezeit vor der Aktion (z. B. 5).
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: "min"
+
+mode: restart
+
+trigger:
+  - platform: numeric_state
+    entity_id: sun.sun
+    attribute: azimuth
+    above: !input open_azimuth
+    id: trigger_open
+
+  - platform: numeric_state
+    entity_id: sun.sun
+    attribute: azimuth
+    above: !input close_azimuth
+    id: trigger_close
+
+condition:
+  - condition: state
+    entity_id: !input auto_enable_input
+    state: "on"
+
+action:
+  # Dynamische Zufallsverzögerung basierend auf den eingegebenen Min/Max-Werten
+  - delay:
+      minutes: "{{ range(var_min_delay | int, (var_max_delay | int) + 1) | random }}"
+    vars:
+      var_min_delay: !input min_delay
+      var_max_delay: !input max_delay
+
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: trigger_open
+        sequence:
+          - action: cover.open_cover
+            target:
+              entity_id: !input target_cover
+
+      - conditions:
+          - condition: trigger
+            id: trigger_close
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: !input target_cover
