@@ -1,6 +1,6 @@
 blueprint:
-  name: "Rollladen-Steuerung nach Sonnen-Azimut mit variabler Zufallsverzögerung"
-  description: "Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne (sun.sun), einem Aktivierungs-Schalter und einer einstellbaren zufälligen Verzögerung (0 = sofort)."
+  name: "Rollladen-Steuerung nach Sonnen-Azimut mit getrennter Zufallsverzögerung"
+  description: "Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne (sun.sun), einem Aktivierungs-Schalter sowie getrennten zufälligen Verzögerungen für Öffnen und Schließen (0 = sofort)."
   domain: automation
   input:
     target_cover:
@@ -27,6 +27,26 @@ blueprint:
           max: 360
           unit_of_measurement: "°"
 
+    open_min_delay:
+      name: Mindest-Verzögerung ÖFFNEN (Minuten)
+      description: Minimale zufällige Wartezeit vor dem Öffnen (0 = sofort).
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: "min"
+
+    open_max_delay:
+      name: Maximale Verzögerung ÖFFNEN (Minuten)
+      description: Maximale zufällige Wartezeit vor dem Öffnen (0 = sofort).
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: "min"
+
     close_azimuth:
       name: Azimut zum Schließen (Grad)
       description: Bei welchem Sonnen-Azimut (z. B. 270 für Westen) soll der Rollladen geschlossen werden?
@@ -37,9 +57,9 @@ blueprint:
           max: 360
           unit_of_measurement: "°"
 
-    min_delay:
-      name: Mindest-Verzögerung (Minuten)
-      description: Minimale zufällige Wartezeit vor der Aktion (0 = sofort schalten).
+    close_min_delay:
+      name: Mindest-Verzögerung SCHLIESSEN (Minuten)
+      description: Minimale zufällige Wartezeit vor dem Schließen (0 = sofort).
       default: 0
       selector:
         number:
@@ -47,9 +67,9 @@ blueprint:
           max: 60
           unit_of_measurement: "min"
 
-    max_delay:
-      name: Maximale Verzögerung (Minuten)
-      description: Maximale zufällige Wartezeit vor der Aktion (0 = sofort schalten).
+    close_max_delay:
+      name: Maximale Verzögerung SCHLIESSEN (Minuten)
+      description: Maximale zufällige Wartezeit vor dem Schließen (0 = sofort).
       default: 5
       selector:
         number:
@@ -59,10 +79,11 @@ blueprint:
 
 mode: restart
 
-# Globale Variablen für den Blueprint definieren
 variables:
-  var_min_delay: !input min_delay
-  var_max_delay: !input max_delay
+  var_open_min: !input open_min_delay
+  var_open_max: !input open_max_delay
+  var_close_min: !input close_min_delay
+  var_close_max: !input close_max_delay
 
 trigger:
   - platform: numeric_state
@@ -83,19 +104,17 @@ condition:
     state: "on"
 
 action:
-  # Zufallsverzögerung ausführen, falls var_max_delay > 0
-  - if:
-      - condition: template
-        value_template: "{{ (var_max_delay | int(0)) > 0 }}"
-    then:
-      - delay:
-          minutes: "{{ range(var_min_delay | int(0), (var_max_delay | int(0)) + 1) | random }}"
-
   - choose:
       - conditions:
           - condition: trigger
             id: trigger_open
         sequence:
+          - if:
+              - condition: template
+                value_template: "{{ (var_open_max | int(0)) > 0 }}"
+            then:
+              - delay:
+                  minutes: "{{ range(var_open_min | int(0), (var_open_max | int(0)) + 1) | random }}"
           - action: cover.open_cover
             target:
               entity_id: !input target_cover
@@ -104,6 +123,12 @@ action:
           - condition: trigger
             id: trigger_close
         sequence:
+          - if:
+              - condition: template
+                value_template: "{{ (var_close_max | int(0)) > 0 }}"
+            then:
+              - delay:
+                  minutes: "{{ range(var_close_min | int(0), (var_close_max | int(0)) + 1) | random }}"
           - action: cover.close_cover
             target:
               entity_id: !input target_cover
