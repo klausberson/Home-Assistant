@@ -1,6 +1,6 @@
 blueprint:
   name: "Rollladen-Steuerung nach Sonnen-Azimut mit variabler Zufallsverzögerung"
-  description: "Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne (sun.sun), einem Aktivierungs-Schalter und einer einstellbaren zufälligen Verzögerung."
+  description: "Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne (sun.sun), einem Aktivierungs-Schalter und einer einstellbaren zufälligen Verzögerung (0 = sofort)."
   domain: automation
   input:
     target_cover:
@@ -39,8 +39,8 @@ blueprint:
 
     min_delay:
       name: Mindest-Verzögerung (Minuten)
-      description: Minimale zufällige Wartezeit vor der Aktion (z. B. 1).
-      default: 1
+      description: Minimale zufällige Wartezeit vor der Aktion (0 = sofort schalten).
+      default: 0
       selector:
         number:
           min: 0
@@ -49,7 +49,7 @@ blueprint:
 
     max_delay:
       name: Maximale Verzögerung (Minuten)
-      description: Maximale zufällige Wartezeit vor der Aktion (z. B. 5).
+      description: Maximale zufällige Wartezeit vor der Aktion (0 = sofort schalten).
       default: 5
       selector:
         number:
@@ -78,9 +78,14 @@ condition:
     state: "on"
 
 action:
-  # Dynamische Zufallsverzögerung basierend auf den eingegebenen Min/Max-Werten
-  - delay:
-      minutes: "{{ range(var_min_delay | int, (var_max_delay | int) + 1) | random }}"
+  # Wenn sowohl Min als auch Max auf 0 stehen oder die Verzögerung 0 ist, schaltet die Logik sofort.
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ (var_min_delay | int) > 0 or (var_max_delay | int) > 0 }}"
+        sequence:
+          - delay:
+              minutes: "{{ range(var_min_delay | int, (var_max_delay | int) + 1) | random }}"
     vars:
       var_min_delay: !input min_delay
       var_max_delay: !input max_delay
