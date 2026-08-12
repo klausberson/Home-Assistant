@@ -59,6 +59,11 @@ blueprint:
 
 mode: restart
 
+# Globale Variablen für den Blueprint definieren
+variables:
+  var_min_delay: !input min_delay
+  var_max_delay: !input max_delay
+
 trigger:
   - platform: numeric_state
     entity_id: sun.sun
@@ -78,17 +83,13 @@ condition:
     state: "on"
 
 action:
-  # Zufallsverzögerung berechnen (falls Min oder Max > 0 ist)
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ (input_min | int(0)) > 0 or (input_max | int(0)) > 0 }}"
-        sequence:
-          - delay:
-              minutes: "{{ range(input_min | int(0), (input_max | int(0)) + 1) | random }}"
-    vars:
-      input_min: !input min_delay
-      input_max: !input max_delay
+  # Zufallsverzögerung ausführen, falls var_max_delay > 0
+  - if:
+      - condition: template
+        value_template: "{{ (var_max_delay | int(0)) > 0 }}"
+    then:
+      - delay:
+          minutes: "{{ range(var_min_delay | int(0), (var_max_delay | int(0)) + 1) | random }}"
 
   - choose:
       - conditions:
