@@ -1,9 +1,11 @@
 blueprint:
   name: Wartungs- & Erinnerungs-Automatisierung (3-in-1)
   description: >
-    Führt normale Erinnerungen, dringende Erinnerungen und das Zurücksetzen eines Wartungs-Helfers
-    in einer einzelnen Automatisierung zusammen.
-  version: 1.0.2
+    ## Wartungs- & Erinnerungs-Automatisierung
+
+    **Version:** 1.0.2
+
+    Führt normale Erinnerungen, dringende Erinnerungen und das Zurücksetzen eines Wartungs-Helfers in einer einzelnen Automatisierung zusammen.
   source_url: https://raw.githubusercontent.com/DEIN_GITHUB_USERNAME/DEIN_REPOSITORY/main/DEINE_DATEI.yaml
   domain: automation
   input:
