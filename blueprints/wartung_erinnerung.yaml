@@ -26,11 +26,11 @@ blueprint:
           domain: input_datetime
 
     # Benachrichtigung
-    notify_device:
+    notify_service:
       name: Benachrichtigungsdienst
-      description: Das Benachrichtigungs-Device oder der Service (z.B. notify.mobile_app_... oder ein Gruppen-Notify).
+      description: Der Benachrichtigungsdienst (z.B. notify.mobile_app_iphone).
       selector:
-        action: {}
+        text: {}
 
     # Zeitsteuerung & Intervalle
     trigger_time:
@@ -129,7 +129,7 @@ action:
           - action: input_boolean.turn_off
             target:
               entity_id: !input input_boolean_reset
-          - action: !input notify_device
+          - action: !input notify_service
             data:
               message: !input message_reset
 
@@ -141,7 +141,7 @@ action:
             entity_id: !input helper_days_sensor
             above: !input urgent_threshold
         sequence:
-          - action: !input notify_device
+          - action: !input notify_service
             data:
               message: !input message_urgent
 
@@ -156,7 +156,7 @@ action:
           - condition: time
             weekday: !input reminder_weekdays
         sequence:
-          - action: !input notify_device
+          - action: !input notify_service
             data:
               message: !input message_warning
 
