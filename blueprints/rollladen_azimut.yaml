@@ -1,6 +1,12 @@
 blueprint:
   name: "Rollladen-Steuerung nach Sonnen-Azimut mit getrennter Zufallsverzögerung"
-  description: "Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne (sun.sun), einem Aktivierungs-Schalter sowie getrennten zufälligen Verzögerungen für Öffnen und Schließen (0 = sofort)."
+  description: >
+    ## Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne
+
+    **Version:** 1.0.5
+
+    Steuert einen Rollladen basierend auf dem Azimut-Winkel der Sonne (sun.sun), einem Aktivierungs-Schalter sowie getrennten zufälligen Verzögerungen für Öffnen und Schließen (0 = sofort).
+  source_url: https://raw.githubusercontent.com/klausberson/Home-Assistant/main/blueprints/rollladen_azimut.yaml
   domain: automation
   input:
     target_cover:
