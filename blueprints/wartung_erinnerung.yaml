@@ -3,10 +3,10 @@ blueprint:
   description: >
     ## Wartungs- & Erinnerungs-Automatisierung
 
-    **Version:** 1.0.3
+    **Version:** 1.0.4
 
     Führt normale Erinnerungen, dringende Erinnerungen und das Zurücksetzen eines Wartungs-Helfers in einer einzelnen Automatisierung zusammen.
-  source_url: https://github.com/klausberson/Home-Assistant/blob/2251eeb1ccd02ccd1b3c0e7b91b40735672c8ec3/blueprints/wartung_erinnerung.yaml
+  source_url: https://raw.githubusercontent.com/klausberson/Home-Assistant/main/blueprints/wartung_erinnerung.yaml
   domain: automation
   input:
     # Entitäten
