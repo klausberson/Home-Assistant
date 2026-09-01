@@ -1,0 +1,163 @@
+blueprint:
+  name: Wartungs- & Erinnerungs-Automatisierung (3-in-1)
+  description: >
+    Führt normale Erinnerungen, dringende Erinnerungen und das Zurücksetzen eines Wartungs-Helfers
+    in einer einzelnen Automatisierung zusammen.
+  domain: automation
+  input:
+    # Entitäten
+    helper_days_sensor:
+      name: Tage-Sensor (Template Sensor)
+      description: Der Sensor, der die Tage seit der letzten Reinigung/Wartung zählt.
+      selector:
+        entity:
+          domain: sensor
+    input_boolean_reset:
+      name: Resetschalter (Input Boolean)
+      description: Der Schalter, den du betätigst, wenn die Aufgabe erledigt wurde.
+      selector:
+        entity:
+          domain: input_boolean
+    input_datetime_last_done:
+      name: Datums-Helfer (Input Datetime)
+      description: Der Helfer, in den das aktuelle Datum beim Zurücksetzen geschrieben wird.
+      selector:
+        entity:
+          domain: input_datetime
+
+    # Benachrichtigung
+    notify_device:
+      name: Benachrichtigungsdienst
+      description: Das Benachrichtigungs-Device oder der Service (z.B. notify.mobile_app_... oder ein Gruppen-Notify).
+      selector:
+        action: {}
+
+    # Zeitsteuerung & Intervalle
+    trigger_time:
+      name: Erinnerungszeitpunkt
+      description: Uhrzeit, zu der täglich geprüft wird.
+      default: "12:00:00"
+      selector:
+        time: {}
+    
+    warning_threshold:
+      name: Schwelle für normale Erinnerung (Tage)
+      description: Ab wie vielen Tagen soll die normale Erinnerung gesendet werden?
+      default: 90
+      selector:
+        number:
+          min: 1
+          max: 365
+          unit_of_measurement: Tage
+
+    urgent_threshold:
+      name: Schwelle für dringende Erinnerung (Tage)
+      description: Ab wie vielen Tagen soll die dringende Erinnerung gesendet werden?
+      default: 120
+      selector:
+        number:
+          min: 1
+          max: 365
+          unit_of_measurement: Tage
+
+    reminder_weekdays:
+      name: Wochentage für normale Erinnerung
+      description: An welchen Tagen soll die normale Erinnerung ausgelöst werden?
+      default:
+        - tue
+        - thu
+        - sat
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: Montag
+              value: mon
+            - label: Dienstag
+              value: tue
+            - label: Mittwoch
+              value: wed
+            - label: Donnerstag
+              value: thu
+            - label: Freitag
+              value: fri
+            - label: Samstag
+              value: sat
+            - label: Sonntag
+              value: sun
+
+    # Texte für Nachrichten
+    message_warning:
+      name: Nachricht (Normale Erinnerung)
+      default: Der Kühlschrank muss bald mal wieder gereinigt werden.
+      selector:
+        text: {}
+    message_urgent:
+      name: Nachricht (Dringende Erinnerung)
+      default: Der Kühlschrank muss dringend mal wieder gereinigt werden!
+      selector:
+        text: {}
+    message_reset:
+      name: Nachricht (Bestätigung Erledigung)
+      default: Der Kühlschrank wurde gereinigt.
+      selector:
+        text: {}
+
+trigger:
+  - trigger: time
+    at: !input trigger_time
+    id: check_time
+  - trigger: state
+    entity_id: !input input_boolean_reset
+    to: "on"
+    id: reset_done
+
+condition: []
+
+action:
+  - choose:
+      # 1. Fall: Resetschalter wurde betätigt
+      - conditions:
+          - condition: trigger
+            id: reset_done
+        sequence:
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: !input input_datetime_last_done
+            data:
+              date: "{{ now().date() }}"
+          - action: input_boolean.turn_off
+            target:
+              entity_id: !input input_boolean_reset
+          - action: !input notify_device
+            data:
+              message: !input message_reset
+
+      # 2. Fall: Zeit-Trigger -> Dringende Erinnerung (> urgent_threshold)
+      - conditions:
+          - condition: trigger
+            id: check_time
+          - condition: numeric_state
+            entity_id: !input helper_days_sensor
+            above: !input urgent_threshold
+        sequence:
+          - action: !input notify_device
+            data:
+              message: !input message_urgent
+
+      # 3. Fall: Zeit-Trigger -> Normale Erinnerung (zwischen warning_threshold und urgent_threshold + Wochentag)
+      - conditions:
+          - condition: trigger
+            id: check_time
+          - condition: numeric_state
+            entity_id: !input helper_days_sensor
+            above: !input warning_threshold
+            below: !input urgent_threshold
+          - condition: time
+            weekday: !input reminder_weekdays
+        sequence:
+          - action: !input notify_device
+            data:
+              message: !input message_warning
+
+mode: single
