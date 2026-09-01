@@ -35,7 +35,7 @@ blueprint:
 
     open_min_delay:
       name: Mindest-Verzögerung ÖFFNEN (Minuten)
-      description: Minimale zufällige Wartezeit vor dem Öffnen (0 = sofort).
+      description: Minimale zufällige Wartezeit vor dem Öffnen (0 = sofort)
       default: 0
       selector:
         number:
@@ -45,7 +45,7 @@ blueprint:
 
     open_max_delay:
       name: Maximale Verzögerung ÖFFNEN (Minuten)
-      description: Maximale zufällige Wartezeit vor dem Öffnen (0 = sofort).
+      description: Maximale zufällige Wartezeit vor dem Öffnen (0 = sofort)
       default: 5
       selector:
         number:
